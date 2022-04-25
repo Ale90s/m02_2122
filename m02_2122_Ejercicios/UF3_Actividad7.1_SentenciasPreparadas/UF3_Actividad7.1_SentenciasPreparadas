@@ -1,18 +1,150 @@
 -- Tasca 1. Nou procediment tasca 1 Actividad 5.2. Procediments amb paràmetres.
 
+###############
 
+-- Tasca 1. Actualitza el preu de tots els productes amb un increment % segons li pasem com a paràmetre. A continuació crida també al procediment de l’Activitat 5.1 Primers procediments (Tasca 3).
+DELIMITER //
+CREATE PROCEDURE updIncrementPreu(IN increment DECIMAL(5,3))
+BEGIN
+	UPDATE producte p
+	SET preu = preu + TRUNCATE((preu * increment), 2);
+END //
+DELIMITER ;
+
+CALL updIncrementPreu(0.015);
+CALL showProductes();
+
+###############
+
+PREPARE tasca1 
+	FROM 'UPDATE producte p
+			SET preu = preu + TRUNCATE((preu * @increment), 2)';
+
+SET @increment = 0.015;
+
+EXECUTE tasca1;
+
+DEALLOCATE PREPARE tasca1;
 
 -- Tasca 2. Nou procediment tasca 7 Actividad 5.2. Procediments amb paràmetres.
 
+/*
+-- Tasca 7. Retorna en un paràmetre la quantitat de productes diferents d’una comanda que li pasem com a parametre.
+DELIMITER //
+CREATE PROCEDURE getQuantitatProducteDiferentsByComanda(IN pNumero SMALLINT(6), OUT pQuantitatProductes SMALLINT)
+BEGIN
+	SELECT COUNT(*) INTO pQuantitatProductes
+	FROM comanda_producte cp 
+	WHERE cp.numero = pNumero;
+END //
+DELIMITER ;
 
+SET @comanda = 10000;
+CALL getQuantitatProducteDiferentsByComanda(@comanda, @quantitat);
+SELECT @quantitat;
+*/
 
 -- Tasca 3. Nou procediment tasca 4 Actividad 6.1. Programació amb IF.
 
+/*
+-- Tasca 4. Crea un procediment que busqui els empleats per nom i cognoms. Tingueu en compte que si deixem algun dels paràmetres buits cerqui pels altres o mostri tots els empleats.
+DELIMITER //
+CREATE PROCEDURE showEmpleatsByParams(IN pNom VARCHAR(20), IN pCognoms VARCHAR(40))
+BEGIN
+	IF (pNom IS NOT NULL AND pCognoms IS NOT NULL) THEN -- Cerca per nom i cognoms
+		SELECT *
+		FROM empleat
+		WHERE nom LIKE pNom AND cognoms LIKE pCognoms;
+	ELSEIF (pNom IS NULL AND pCognoms IS NOT NULL) THEN -- Cerca per cognoms
+		SELECT *
+		FROM empleat
+		WHERE cognoms LIKE pCognoms;
+	ELSEIF (pNom IS NOT NULL AND pCognoms IS NULL) THEN -- Cerca per nom
+		SELECT *
+		FROM empleat
+		WHERE nom LIKE pNom;
+	ELSE  -- Cerca tots
+		SELECT *
+        FROM empleat;
+	END IF;
+END //
+DELIMITER ;
 
+CALL showEmpleatsByParams(NULL, NULL);
+CALL showEmpleatsByParams('Jordi', NULL);
+CALL showEmpleatsByParams(NULL, 'Casas');
+CALL showEmpleatsByParams('Marta', 'Pou');
+CALL showEmpleatsByParams('%r%', NULL);
+
+*/
 
 -- Tasca 4. Nou procediment tasca 9 Actividad 6.1. Programació amb IF.
 
+/*
+-- Tasca 9. Crea un procediment que donada una reunió i un paràmetre amb els valors ‘W’, ‘D’, ‘M’ o ‘Y’, endarrereixi una setmana, un dia, un més o un any la reunió, respectivament. 
+DELIMITER //
+CREATE PROCEDURE setEndarrarimentReunio(IN pId_reunio SMALLINT, IN pOpcio ENUM('W', 'D', 'M', 'Y'))
+BEGIN
+	IF (pOpcio = 'W') THEN
+		UPDATE reunio
+		SET data = ADDDATE(data,  INTERVAL 1 WEEK)
+		WHERE id_reunio = pId_reunio;
+	ELSEIF (pOpcio = 'D') THEN
+		UPDATE reunio 
+		SET data = ADDDATE(data,  INTERVAL 1 DAY)
+		WHERE id_reunio = pId_reunio;
+	ELSEIF (pOpcio = 'M') THEN
+		UPDATE reunio 
+		SET data = ADDDATE(data,  INTERVAL 1 MONTH)
+		WHERE id_reunio = pId_reunio;
+	ELSEIF (pOpcio = 'Y') THEN
+		UPDATE reunio 
+		SET data = ADDDATE(data,  INTERVAL 1 YEAR)
+		WHERE id_reunio = pId_reunio;
+    END IF;
+END //
+DELIMITER ;
 
+SELECT *
+FROM reunio;
+CALL setEndarrarimentReunio(5, 'D');
+CALL setEndarrarimentReunio(6, 'W');
+CALL setEndarrarimentReunio(7, 'M');
+CALL setEndarrarimentReunio(8, 'Y');
+
+SELECT *
+FROM reunio;
+*/
 
 -- Tasca 5. Nou procediment tasca 5 Actividad 6.2. Programació amb CASE.
 
+/*
+-- Tasca 5. Retorna per paràmetre la quantitat d'ingredients que té un producte en concret a partir del seu identificador. Els productes que no són pizzes en si mateixos són un únic ingredient.
+-- DROP PROCEDURE getQuantitatIngredientsByProducte;
+DELIMITER //
+CREATE PROCEDURE getQuantitatIngredientsByProducte(IN pId_producte SMALLINT(6), OUT pQuantitat SMALLINT)
+BEGIN
+	SET pQuantitat = 0;
+    
+    IF (pId_producte IS NOT NULL) THEN
+		SELECT count(*) INTO pQuantitat
+		FROM producte p
+			LEFT JOIN postre po ON p.id_producte = po.id_producte
+			LEFT JOIN beguda be ON p.id_producte = be.id_producte
+			LEFT JOIN pizza pz ON p.id_producte = pz.id_producte
+			LEFT JOIN pizza_ingredient pi ON pz.id_producte = pi.id_producte
+		WHERE p.id_producte = pId_producte
+		GROUP BY p.id_producte;
+	END IF;
+END //
+DELIMITER ;
+
+CALL getQuantitatIngredientsByProducte(1, @quantitat);
+SELECT CONCAT(@quantitat, ' ingredient/es');
+CALL getQuantitatIngredientsByProducte(2, @quantitat);
+SELECT CONCAT(@quantitat, ' ingredient/es');
+CALL getQuantitatIngredientsByProducte(8, @quantitat);
+SELECT CONCAT(@quantitat, ' ingredient/es');
+CALL getQuantitatIngredientsByProducte(NULL, @quantitat);
+SELECT CONCAT(@quantitat, ' ingredient/es');
+*/
