@@ -1,3 +1,8 @@
+/*
+A REMARCAR QUE YO SUMO LAS DIFERENTES COMANDAS PARA LLEGAR AL IMPORTE MÍNIMO 
+e.g: La suma de las diferentes comandas de Josep Vila superan los 50 euros por lo que va a entrar en el sorteo
+*/
+
 USE uf2_p2_pizzeria;
 
 DELIMITER //
