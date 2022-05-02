@@ -1,62 +1,62 @@
+USE uf2_p2_pizzeria;
+
 DELIMITER //
-CREATE OR REPLACE PROCEDURE generaSorteigs(IN nSorteos INT, IN fecha DATE,IN nombreSorteo VARCHAR(30),
-IN premiosAREpartir INT, IN importeMinimo INT)
+CREATE OR REPLACE PROCEDURE generaSorteigs(IN numSorteos INT, IN fecha DATE,IN nombreSorteo VARCHAR(30),
+IN premiosAREpartir INT, IN importeMinimo INT, OUT estado TEXT)
 BEGIN
 
-	SET @error = "Todo correcto";
+	SET estado = "Los sorteos se han repartido satisfactoriamente.";
 
 
-	IF (nSorteos > 0 AND importeMinimo > 0)
+	IF (numSorteos > 0 AND importeMinimo > 0)
 	THEN
-		SELECT 1;
+        
+        SET @iteraciones = 0;
+        
+		REPEAT
+            INSERT INTO sorteig (nom, data, premis) VALUES (nombreSorteo, fecha, premiosARepartir);
+
+			INSERT INTO sorteig_comanda(id_sorteig, numero) 
+			SELECT LAST_INSERT_ID(), co.numero
+				FROM comanda AS co 
+					INNER JOIN client cl ON cl.id_client = co.client_id
+					INNER JOIN comanda_producte AS copr ON co.numero = copr.numero             
+					INNER JOIN producte AS pr ON copr.id_producte = pr.id_producte         
+				GROUP BY cl.id_client      
+				HAVING  SUM(copr.quantitat * pr.preu) > importeMinimo         
+				ORDER BY RAND()         
+				LIMIT premiosARepartir;
+			
+            SET fecha = fecha + INTERVAL '1' DAY;
+			SET @iteraciones = @iteraciones + 1;
+		UNTIL (@iteraciones = numSorteos)
+		END REPEAT;
+        
+        IF ((SELECT COUNT(*)
+				FROM sorteig_comanda
+				WHERE id_sorteig = LAST_INSERT_ID()) < premiosARepartir)
+		THEN
+			SET estado = "Los premios del sorteo se han repartido satisfactoriamente pero sobran premios.";
+		END IF;
+        
 	ELSE
-		SET @error = "Tiene que haber más de un sorteo y el importe mínimo de compra es 1€";
+		SET estado = "Tiene que haber más de un sorteo y el importe mínimo de compra es 1€.";
 	END IF;
 
 
 END //
 DELIMITER ;
 
-CALL generaSorteigs(1, '19700808', 1, 1, 1);
-SELECT @error;
+CALL generaSorteigs(3, '19700830',"VALE DESCUENTO" , 3, 50, @estado);
+SELECT @estado;
+
+CALL generaSorteigs(0, '19700830',"POSTRE GRATIS" , 3, 50, @estado);
+SELECT @estado;
+
+CALL generaSorteigs(1, '19700830',"VIAJE A VAVAYI" , 20, 10, @estado);
+SELECT @estado;
 
 SELECT *
 	FROM sorteig;
 SELECT *
 	FROM sorteig_comanda;
-
-INSERT INTO sorteig (nom, data, premis)
-	VALUES ("Test", '19700808', 2);
-
-INSERT INTO sorteig_comanda (id_sorteig, numero)
-	VALUES (18,10002);
-
-DELETE FROM sorteig;
-
-DELETE FROM sorteig_comanda
-	WHERE numero = 10002;
-
-
-
-
-
-
-SELECT numero, SUM(p.preu * cp.quantitat) AS test
-	FROM comanda_producte cp
-		INNER JOIN producte p ON p.id_producte = cp.id_producte
-    GROUP BY numero
-    HAVING test > 50;
-
-
-
-
-
-
-
-
-select FLOOR(RAND() * (10 - 5 + 1) + 5);
-
-SET @a = 10;
-SET @b = 5;
-
-SELECT FLOOR(RAND() * (@a - @b + 1) + @b);
