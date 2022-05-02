@@ -7,6 +7,18 @@ Crea un procediment emmagatzemat que, sense rebre cap paràmetre,
 ompli la columna num_comandes amb el nombre de comandes que ha fet cada client.
 */
 
+ALTER TABLE client
+	ADD num_comandes SMALLINT;
+
+DELIMITER //
+CREATE OR REPLACE PROCEDURE numComandes()
+BEGIN
+
+
+
+END //
+DELIMITER ;
+
 
 
 -- Tasca 2. 
