@@ -1,3 +1,5 @@
+USE uf2_p2_pizzeria;
+
 -- Tasca1. 
 /*
 Afegeix una columna nova la taula clients que s’anomenti num_comandes. 
@@ -13,14 +15,41 @@ ALTER TABLE client
 DELIMITER //
 CREATE OR REPLACE PROCEDURE numComandes()
 BEGIN
+DECLARE done INT DEFAULT FALSE;
+DECLARE var_nComandas INT;
+DECLARE var_id_cliente INT;
+DECLARE nComandas CURSOR FOR 
+	SELECT COUNT(*), cl.id_client
+	FROM client cl
+		INNER JOIN comanda co ON co.client_id = cl.id_client
+	GROUP BY cl.id_client;
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
 
+OPEN nComandas;
 
+bucle: LOOP
+FETCH FROM nComandas INTO var_nComandas, var_id_cliente;
+
+IF done THEN
+	LEAVE bucle;
+END IF;
+
+UPDATE client 
+		SET num_comandes = var_nComandas
+	WHERE id_client = var_id_cliente;
+    
+END LOOP;
+
+CLOSE nComandas;
 
 END //
 DELIMITER ;
 
+SELECT *
+	FROM client;
 
-
+CALL numComandes();
+    
 -- Tasca 2. 
 /*
 Afegeix una columna nova a la taula empleats que s’anomeni total_facturacio. 
@@ -30,6 +59,49 @@ Crea un procediment emmagatzemat que, rebent per paràmetre un enter que represe
 ompli la columna de quantitat de facturació total de l'empleat sense comptar l'IVA.
 */
 
+ALTER TABLE empleat
+	ADD total_facturacio INT;
+
+DELIMITER //
+CREATE OR REPLACE PROCEDURE facturacioTotal(IN iva INT)
+BEGIN
+DECLARE done INT DEFAULT FALSE;
+DECLARE var_id_empleado INT;
+DECLARE var_facComandas INT;
+DECLARE facClientes CURSOR FOR
+SELECT co.empleat_id, SUM(cp.quantitat * p.preu)
+	FROM comanda co
+		INNER JOIN comanda_producte cp ON cp.numero = co.numero
+        INNER JOIN producte p ON p.id_producte = cp.id_producte
+	GROUP BY co.empleat_id;
+
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = true;
+
+OPEN facClientes;
+
+bucle:LOOP
+FETCH FROM facClientes INTO var_id_empleado, var_facComandas;
+
+IF done THEN
+	LEAVE bucle;
+END IF;
+
+UPDATE empleat
+	SET total_facturacio = var_facComandas - (var_facComandas * (iva / 100))
+    WHERE id_empleat = var_id_empleado;
+
+END LOOP;
+
+CLOSE facClientes;
+
+END //
+DELIMITER ;
+
+CALL facturacioTotal(10);
+
+SELECT *
+	FROM empleat;
+    
 
 
 -- Tasca 3.
