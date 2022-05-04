@@ -4,7 +4,6 @@ USE uf2_p2_pizzeria;
 /*
 Afegeix una columna nova la taula clients que s’anomenti num_comandes. 
 Aquest nou camp contindrà la quantitat de comandes diferents que ha realitzat aquell client.
-
 Crea un procediment emmagatzemat que, sense rebre cap paràmetre, 
 ompli la columna num_comandes amb el nombre de comandes que ha fet cada client.
 */
@@ -112,3 +111,24 @@ El procediment duplicarà a la taula o taules corresponents tots els productes d
 afegint al final del nom del producte s'hi afegirà el text "(còpia)". Per exemple, si estem duplicant 
 les begudes i tenim una 'Ampolla Coca-Cola' es crearà un nou producte anomenat 'Ampolla Coca-Cola (còpia)’.
 */
+
+DELIMITER //
+CREATE OR REPLACE PROCEDURE duplicaProductesByTipus (IN opcio ENUM('B', 'D', 'P'))
+BEGIN
+
+CASE 
+	WHEN opcio = 'B' THEN 
+    SELECT 1;
+    WHEN opcio = 'D' THEN 
+    SELECT 2;
+    WHEN opcio = 'P' THEN 
+    SELECT 3;
+END CASE;
+
+END //
+DELIMITER ;
+
+INSERT INTO beguda;
+select * from producte;
+
+CALL duplicaProductesByTipus('B');
