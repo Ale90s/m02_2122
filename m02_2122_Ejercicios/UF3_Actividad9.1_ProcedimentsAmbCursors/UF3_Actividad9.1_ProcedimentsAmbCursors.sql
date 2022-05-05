@@ -116,19 +116,70 @@ DELIMITER //
 CREATE OR REPLACE PROCEDURE duplicaProductesByTipus (IN opcio ENUM('B', 'D', 'P'))
 BEGIN
 
-CASE 
-	WHEN opcio = 'B' THEN 
-    SELECT 1;
-    WHEN opcio = 'D' THEN 
-    SELECT 2;
-    WHEN opcio = 'P' THEN 
-    SELECT 3;
+DECLARE done INT DEFAULT FALSE;
+DECLARE var_id_producte INT;
+DECLARE var_nom VARCHAR(65);
+DECLARE var_preu DECIMAL(4, 2);
+DECLARE var_capacitat INT;
+DECLARE var_alcoholica ENUM('N', 'S');
+
+DECLARE begudes_actuals CURSOR FOR 
+	SELECT p.nom, p.preu, be.capacitat, be.alcoholica
+		FROM producte p
+			INNER JOIN beguda be ON be.id_producte = p.id_producte;
+DECLARE  postres_actuals CURSOR FOR
+	SELECT p.nom, p.preu
+		FROM producte p
+			INNER JOIN postre pos ON pos.id_producte = p.id_producte;
+DECLARE pizzes_actuals CURSOR FOR
+	SELECT p.nom, p.preu
+		FROM producte p
+			INNER JOIN pizza piz ON piz.id_producte = p.id_producte;
+
+DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+
+OPEN begudes_actuals;
+OPEN postres_actuals;
+OPEN pizzes_actuals;
+
+read_loop: LOOP
+CASE opcio
+	WHEN  'B' THEN 
+    FETCH begudes_actuals INTO var_nom, var_preu, var_capacitat, var_alcoholica;
+    WHEN 'D' THEN 
+    FETCH postres_actuals INTO var_nom, var_preu;
+    WHEN 'P' THEN 
+    FETCH pizzes_actuals INTO var_nom, var_preu;
 END CASE;
+
+IF done THEN
+	LEAVE read_loop;
+END IF;
+
+SET var_nom = CONCAT(var_nom, " (còpia)");
+INSERT INTO producte (nom, preu) VALUES (var_nom, var_preu);
+SET var_id_producte = LAST_INSERT_ID();
+
+CASE opcio
+	WHEN  'B' THEN 
+		INSERT INTO beguda (id_producte, capacitat, alcoholica) VALUES (var_id_producte, var_capacitat, var_alcoholica);
+    WHEN 'D' THEN 
+		INSERT INTO postre (id_producte) VALUES (var_id_producte);
+    WHEN 'P' THEN 
+		INSERT INTO pizza (id_producte) VALUES (var_id_producte);
+END CASE;
+END LOOP;
+
+CLOSE begudes_actuals;
+CLOSE postres_actuals;
+CLOSE pizzes_actuals;
 
 END //
 DELIMITER ;
 
-INSERT INTO beguda;
+select * from postre;
+select * from beguda;
 select * from producte;
+select * from pizza;
 
 CALL duplicaProductesByTipus('B');
