@@ -51,3 +51,19 @@ SELECT getRestaEnters(preu)
 
 -- Tasca 3. Volem crear una funció anomenada getMinEnters que realitzi les funcions de MIN per valors enters.
 
+DELIMITER //
+CREATE OR REPLACE AGGREGATE FUNCTION getMinEnters(n INT) RETURNS INT
+BEGIN
+	DECLARE minimo INT DEFAULT 2147483647;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND RETURN minimo;
+	LOOP
+		FETCH GROUP NEXT ROW;
+        IF minimo > n THEN
+			SET minimo = n;
+		END IF;
+	END LOOP;
+END //
+DELIMITER ;
+
+SELECT getMinEnters(numero)
+	FROM comanda;
