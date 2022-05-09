@@ -1,9 +1,15 @@
 USE uf2_p2_pizzeria;
 
 -- Tasca 1. Crea una funció que realitzi la funcionalitat de la Tasca 1 de M02 UF2 Activitat 9.1 - Consultes niades.
+-- Mostra els ingredients de les pizzes de la darrera comanda que s'ha demanat.
 
-/*
--- Tasca 1. Mostra els ingredients de les pizzes de la darrera comanda que s'ha demanat.
+DELIMITER //
+CREATE OR REPLACE FUNCTION muestraIngredientes()
+RETURNS INT
+BEGIN
+	RETURN (SELECT MAX(numero) FROM comanda);
+END //
+DELIMITER ;
 
 SELECT DISTINCT ing.nom
 	FROM ingredient AS ing
@@ -11,22 +17,27 @@ SELECT DISTINCT ing.nom
     INNER JOIN pizza piz ON piz.id_producte = pizing.id_producte
     INNER JOIN producte pr ON pr.id_producte = piz.id_producte
     INNER JOIN comanda_producte copr ON copr.id_producte = pr.id_producte
-    WHERE copr.numero = (SELECT MAX(numero) FROM comanda_producte);
-*/
+    WHERE copr.numero = muestraIngredientes();
 
 -- Tasca 2. Crea una funció que realitzi la funcionalitat de la Tasca 10 de M02 UF2 Activitat 9.1 - Consultes niades.
+-- De la comanda que s'ha demanat a l'hora més tard, mostra les pizzes que ha demanat.
 
-/*
--- Tasca 10. De la comanda que s'ha demanat a l'hora més tard, mostra les pizzes que ha demanat.
+DELIMITER //
+CREATE OR REPLACE FUNCTION horaMasTarde()
+RETURNS TIME
+BEGIN
+	RETURN (SELECT MAX(TIME(co.data_hora)) FROM comanda co);
+END //
+DELIMITER ;
 
 SELECT DISTINCT pr.nom
 FROM comanda co 
 	INNER JOIN comanda_producte copr ON co.numero = copr.numero
 	INNER JOIN producte pr ON copr.id_producte = pr.id_producte
 	INNER JOIN pizza piz ON pr.id_producte = piz.id_producte
-WHERE TIME(co.data_hora) = (SELECT MAX(TIME(co.data_hora))
-							FROM comanda co);
-*/
+WHERE TIME(co.data_hora) = horaMasTarde();
+                            
+
 
 -- Tasca 3. Crea una funció que realitzi la funcionalitat de la Tasca 11 de M02 UF2 Activitat 9.1 - Consultes niades.
 
