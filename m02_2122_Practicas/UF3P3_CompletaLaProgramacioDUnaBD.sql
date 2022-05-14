@@ -6,6 +6,16 @@ Per exemple, a partir de la data 04/04/2020 i la lletra ‘P’, buscarem la com
 En el cas que hi hagi més d’una, retornem només una d’aquestes.
 */
 
+DELIMITER //
+CREATE OR REPLACE FUNCTION TascaUn(fecha DATE, tipo ENUM('P', 'U'))
+RETURNS DATE
+BEGIN
+
+RETURN NULL;
+
+END //
+DELIMITER ;
+
 -- Tasca 2. 
 /*
 Crea un procediment per què donat dos nombres, generi un nombre aleatori entre el primer i el segon. 
@@ -88,15 +98,36 @@ Soluciona a partir dels disparadors que es generi una còpia de les dades d'un s
 Crea l'estructura de taules a la base de dades necessària per a gestionar la tasca.
 */
 
-DELIMITER //
-CREATE OR REPLACE TRIGGER TascaQuatre()
+CREATE TABLE copiaSorteig(
+id_sorteig SMALLINT AUTO_INCREMENT,
+nom VARCHAR(20),
+data DATE,
+premis TINYINT,
+PRIMARY KEY (id_sorteig)
+) ENGINE = INNODB;
 
+DELIMITER //
+CREATE OR REPLACE TRIGGER TascaQuatre AFTER DELETE ON sorteig FOR EACH ROW
 BEGIN
-	SELECT 1;
+	IF(SELECT 1 FROM copiaSorteig WHERE id_sorteig = OLD.id_sorteig) THEN
+    
+		DELETE FROM copiaSorteig WHERE id_sorteig = OLD.id_sorteig;
+        INSERT INTO copiaSorteig VALUES (OLD.id_sorteig, OLD.nom, OLD.data, OLD.premis);
+        
+    ELSE
+		INSERT INTO copiaSorteig VALUES (OLD.id_sorteig, OLD.nom, OLD.data, OLD.premis);
+    END IF;
+	
 END //
 DELIMITER ;
 
-SELECT * 
+INSERT INTO sorteig VALUES (1, "TestEntrada", 20170109, 2);
+DELETE FROM sorteig WHERE id_sorteig = 1;
+
+SELECT *
+	FROM copiaSorteig;
+
+SELECT *
 	FROM sorteig;
 
 -- Tasca 5.
@@ -104,3 +135,79 @@ SELECT *
 Soluciona usant un cursor la generació d’un informe. Per a cada registre de la taula de clients, revisa quantes comandes ha fet superiors a un import enviat com a paràmentre, 
 amb la finalitat de mostrar un resultat semblant a l’exemple. NO es vol mostrar la informació registre per registre, sinó que es vol mostrar alhora com si fos un únic registre amb tota la informació.
 */
+
+ALTER TABLE client
+	ADD registro INT;
+
+DELIMITER //
+CREATE OR REPLACE PROCEDURE TascaCinc(IN dineroMin INT)
+BEGIN
+	
+    DECLARE final INT DEFAULT FALSE;
+    DECLARE id_cliente INT;
+    DECLARE numComandes, numComandestotal, clientTotales INT DEFAULT 0;
+	
+
+	DECLARE nClientes CURSOR FOR 
+		SELECT id_client, COUNT(*)
+			FROM (
+				SELECT cl.id_client, co.numero, SUM(cp.quantitat * p.preu) AS suma
+					FROM producte p
+						INNER JOIN comanda_producte cp ON cp.id_producte = p.id_producte
+						INNER JOIN comanda co ON co.numero = cp.numero
+						INNER JOIN client cl ON cl.id_client = co.client_id
+					GROUP BY co.numero
+						HAVING suma > dineroMin) AS sumaDinero
+					GROUP BY id_client;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET FINAL = TRUE;
+    
+    
+	OPEN nClientes;
+		bucle: LOOP
+			FETCH FROM nClientes INTO id_cliente, numComandes;
+			IF final THEN
+				LEAVE bucle;
+			END IF;
+            
+            UPDATE client
+				SET registro = numComandes
+					WHERE id_client = id_cliente;
+                    
+			SET numComandestotal = numComandestotal + numComandes;
+			SET clientTotales = clientTotales + 1;
+            
+		END LOOP;
+    CLOSE nClientes;
+
+
+IF (numComandesTotal = 0) THEN
+	
+    SELECT CONCAT("No hay ningún cliente con comandas superiores a ", dineroMin, "€") AS Informe;    
+    
+ELSE
+
+SET @aux = 0;
+
+	SELECT CONCAT("Informe de clients amb Comandes > ",dineroMin ,"€") AS Informe
+		UNION ALL
+	SELECT "-------------------------------------------------------"
+		UNION ALL
+	SELECT concat(@aux:=@aux+1,". ",nom,"  (",registro, " comandes)")
+		FROM client
+			where registro IS NOT NULL
+        UNION ALL
+	SELECT "-------------------------------------------------------"
+		UNION ALL
+	SELECT CONCAT("Total: ",clientTotales ," clients (",numComandestotal ," comandes)");
+
+
+UPDATE client SET registro = NULL;
+
+END IF;
+
+END //
+DELIMITER ;
+    
+CALL TascaCinc(30);
+CALL TascaCinc(0);
+CALL TascaCinc(100);
