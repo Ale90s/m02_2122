@@ -8,13 +8,57 @@ En el cas que hi hagi més d’una, retornem només una d’aquestes.
 
 DELIMITER //
 CREATE OR REPLACE FUNCTION TascaUn(fecha DATE, tipo ENUM('P', 'U'))
-RETURNS DATE
+RETURNS INT
 BEGIN
 
-RETURN NULL;
+	DECLARE fechaAnterior, fechaPosterior DATE;
+    
+    IF (SELECT 1 FROM comanda WHERE DATE(data_hora) = fecha LIMIT 1) THEN
+		RETURN 
+			(SELECT numero
+				FROM comanda
+					WHERE DATE(data_hora) = fecha
+				LIMIT 1);
+    END IF;
+    
+	CASE tipo
+		WHEN 'P' THEN
+			SET fechaAnterior = (LAST_DAY(fecha) + INTERVAL 1 DAY) - INTERVAL 1 MONTH;
+            SET fechaPosterior = fechaAnterior;
+		WHEN 'U' THEN
+			SET fechaPosterior = LAST_DAY(fecha);
+            SET fechaAnterior = fechaPosterior;
+    END CASE;
+    
+    REPEAT
+		
+		SET fechaPosterior = fechaPosterior + INTERVAL 1 DAY;  
+		SET fechaAnterior = fechaAnterior - INTERVAL 1 DAY;
+        
+	UNTIL ((SELECT 1 FROM comanda WHERE DATE(data_hora) = fechaAnterior LIMIT 1) OR
+				(SELECT 1 FROM comanda WHERE DATE(data_hora) = fechaAnterior LIMIT 1))		
+	END REPEAT;
+    
+    IF (SELECT 1 FROM comanda WHERE DATE(data_hora) = fechaAnterior LIMIT 1) THEN
+	RETURN
+		(SELECT numero
+				FROM comanda
+					WHERE DATE(data_hora) = fechaAnterior
+				LIMIT 1);
+    ELSE
+    RETURN
+		(SELECT numero
+				FROM comanda
+					WHERE DATE(data_hora) = fechaPosterior
+				LIMIT 1);
+    END IF;
 
 END //
 DELIMITER ;
+
+SELECT TascaUn(@fecha, 'P');
+SELECT TascaUn(@fecha, 'U');
+SET @fecha = DATE(20170103);
 
 -- Tasca 2. 
 /*
