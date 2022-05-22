@@ -48,7 +48,7 @@ SELECT getRestaEnters(preu)
 	FROM producte
     ORDER BY preu DESC;
     
-
+/* A PARTIR DE AQUI SOLUCIONES JOSE */
 -- Tasca 3. Volem crear una funció anomenada getMinEnters que realitzi les funcions de MIN per valors enters.
 
 DELIMITER //
@@ -67,3 +67,83 @@ DELIMITER ;
 
 SELECT getMinEnters(numero)
 	FROM comanda;
+
+-- Tasca 4. Volem crear una funció anomenada getMaxEnters que realitzi les funcions de MAX per valors enters.
+DELIMITER //
+CREATE OR REPLACE AGGREGATE FUNCTION getMaxEnters(pEnter INT) RETURNS INT
+BEGIN
+	DECLARE vMax INT;
+    DECLARE vCount INT DEFAULT 0;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND RETURN vMax;
+
+	LOOP
+		FETCH GROUP NEXT ROW;
+        IF vCount = 0 THEN
+			SET vMax = pEnter;
+            SET vCount = vCount + 1;
+        END iF;
+        IF pEnter > vMax THEN
+			SET vMax = pEnter;
+		END IF;
+	END LOOP;
+END //
+DELIMITER ;
+
+SELECT getMaxEnters(valor)
+FROM 
+	(SELECT 1 AS valor
+	  UNION 
+	  SELECT 2
+	  UNION 
+	  SELECT 3
+	) tValors;
+    
+SELECT getMaxEnters(valor)
+FROM 
+	(SELECT 1 AS valor
+	  UNION 
+	  SELECT 5
+	  UNION 
+	  SELECT 3
+	) tValors;
+    
+-- Tasca 5. Volem crear una funció anomenada getAvgEnters que realitzi les funcions de AVG per valors enters.
+DELIMITER //
+CREATE OR REPLACE AGGREGATE FUNCTION getAvgEnters(pEnter INT) RETURNS DOUBLE
+BEGIN
+	DECLARE vAvg INT DEFAULT 0;
+    DECLARE vCount INT DEFAULT 0;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND
+    BEGIN
+		IF vCount > 0 THEN
+			RETURN vAvg / vCount;
+		ELSE
+			RETURN 0;
+		END IF;
+	END;
+
+	LOOP
+		FETCH GROUP NEXT ROW;
+		SET vCount = vCount + 1;
+		SET vAvg = vAvg + pEnter;
+	END LOOP;
+END //
+DELIMITER ;
+
+SELECT getAvgEnters(valor)
+FROM 
+	(SELECT 1 AS valor
+	  UNION 
+	  SELECT 2
+	  UNION 
+	  SELECT 3
+	) tValors;
+    
+SELECT getAvgEnters(valor)
+FROM 
+	(SELECT 1 AS valor
+	  UNION 
+	  SELECT 7
+	  UNION 
+	  SELECT 3
+	) tValors;
