@@ -1,0 +1,66 @@
+# DAM M02 UF3
+# Activitat 11.2 Triggers BD Banc (enunciat)
+
+Tenim una taula on queden registrats els moviments que hi ha en un compte bancari. Necessitem les taules següents:
+
+La taula moviment serà:
+
+CREATE TABLE moviment
+
+(compte    VARCHAR(10)        NOT NULL,
+
+data       TIMESTAMP          NOT NULL DEFAULT CURRENT_TIMESTAMP(),
+
+descripcio VARCHAR(30)        NOT NULL,
+
+tipus      ENUM('H','D')      NOT NULL,
+
+valor      DECIMAL(7,2)       NOT NULL
+
+)
+
+El camp compte contindrà el número del compte corrent, la descripcio serà la descripció del moviment que s'ha fet, el tipus serà H si s'ha fet un ingrés o D si és una despesa, i el valor serà el valor en euros del moviment.
+
+Tenim tres taules més, la primera anomenada seguretat servirà per fer un registre dels moviments que s'han fet i qui els ha fet:
+
+CREATE TABLE seguretat
+
+(compte           VARCHAR(10)     NOT NULL,
+
+data              TIMESTAMP       NOT NULL,
+
+usuari            VARCHAR(20)     NOT NULL,
+
+descripcio_valor  VARCHAR(30)     NOT NULL
+
+)
+
+Així si fem un camp canvi escriuria:
+
+COMPTE    DATA                  USUARI            DESCRIPCIÓ I VALOR
+
+1125      2012/05/25 10:04:52   root@localhost    Ingrés 300
+
+5699      2012/05/26 10:10:02   root@localhost    Reintegrament -200
+
+La segona taula serà el saldo que hi ha en cada moment a cada compte. A la taula saldo hi haurà el número de compte i el saldo que hi ha en aquell moment. La taula saldo serà:
+
+CREATE TABLE saldo
+
+(compte       VARCHAR(10)     PRIMARY KEY,
+
+saldo         DECIMAL(7,2)    NOT NULL
+
+)
+
+La tercera taula serà el saldo total (és a dir, de tots els comptes) que hi ha al final de cada dia.
+
+CREATE TABLE saldo_diari
+
+(data          DATE            PRIMARY KEY,
+
+saldo          DECIMAL(7,2)    NOT NULL
+
+)
+
+Fes els disparadors necessaris. Tingues en compte que no podem fer actualitzacions ni esborrar (UPDATE i DELETE) a la taula moviment

@@ -1,0 +1,116 @@
+# DAM M02 UF3
+# Activitat 11.2 Triggers BD Lliga (enunciat)
+
+Tenim una lliga de futbol de 4 equips, i volem crear una base de dades anomenada lliga que ens actualitzi la classificació després de cada partit. Tenim la taula amb els equips i els partits:
+
+CREATE TABLE equip
+
+(codi      VARCHAR(3)           PRIMARY KEY,
+
+nom        VARCHAR(20)
+
+) ENGINE=InnoDB;
+
+CREATE TABLE partit
+
+(jornada INT,
+
+equip_local        VARCHAR(3),
+
+equip_visitant     VARCHAR(3),
+
+gols_local         INT               DEFAULT 0,
+
+gols_visitant      INT               DEFAULT 0,
+
+finalitzat         ENUM('S','N')     DEFAULT 'N',
+
+PRIMARY KEY(jornada,equip_local),
+
+FOREIGN KEY (equip_local) REFERENCES equip (codi),
+
+FOREIGN KEY (equip_visitant) REFERENCES equip (codi)
+
+) ENGINE=InnoDB;
+
+Els equips poden ser l''Atlètic Terrassa', el 'Ràpid Vacarisses', el 'Sporting Can Boada' i el 'FC Viladecavalls'. Els codis són respectivament TER, VAC, CAN i VIL.
+
+Exercici DCL_80:
+
+Volem crear una taula anomenada gol de manera que quan inserim un golejador aleshores actualitzi el marcador del partit de la taula partit. Tingueu en compte que si és un gol a pròpia porta la comptabilitzi a l'equip rival.
+
+CREATE TABLE gol
+
+(jornada     INT,
+
+equip        VARCHAR(3),
+
+jugador      VARCHAR(20),
+
+minut        INT,
+
+propia_porta ENUM('S','N')
+
+) ENGINE=InnoDB;
+
+Exercici DCL_81:
+
+Volem que cada vegada que actualitzem la taula partit (que serà al final del partit, per tant indicarem que el partit està finalitzat) s'actualitzi la taula classificacio.
+
+Aquesta taula contindrà:
+
+CREATE TABLE classificacio
+
+(equip              VARCHAR(3)         PRIMARY KEY,
+
+partits_guanyats    INT                DEFAULT 0,
+
+partits_empatats    INT                DEFAULT 0,
+
+partits_perduts     INT                DEFAULT 0,
+
+gols_favor          INT                DEFAULT 0,
+
+gols_contra         INT                DEFAULT 0,
+
+FOREIGN KEY (equip) REFERENCES equip (codi)
+
+) ENGINE=InnoDB;
+
+Exercici DCL_82:
+
+Volem crear una taula golejador de manera que cada vegada vegada que un jugador marqui un gol (i no sigui a pròpia porta) actualitzi el total de gols que ha marcat a la competició.
+
+Aquesta taula contindrà:
+
+CREATE TABLE golejador
+
+(jugador      VARCHAR(20),
+
+equip         VARCHAR(3),
+
+gols          INT
+
+) ENGINE=InnoDB;
+
+Exercici DCL_83:
+
+Fes un procediment anomenat classificacio que ens mostri tots els camps de la taula classificacio més els partits jugats i els punts (tingues en compte que els punts per partit guanyat són 3 i per partit empatat 1). L'ordre per dels equips serà:
+
+1r. L'equip que té més punts.
+
+2n. L'equip que ha marcat més gols.
+
+3r. L'equip que té una diferència entre gols a favor i en contra més gran.
+
+Exercici DCL_84:
+
+Fes un procediment anomenat jornada que ens mostri els resultats d'una jornada que li indiquem.
+
+Exemple d'execució: CALL jornada(2);
+
+Exercici DCL_85:
+
+Fes un procediment anomenat golejador que ens mostri la llista de golejadors ordenada de més gols a menys.
+
+Exemple d'execució: CALL golejador;
