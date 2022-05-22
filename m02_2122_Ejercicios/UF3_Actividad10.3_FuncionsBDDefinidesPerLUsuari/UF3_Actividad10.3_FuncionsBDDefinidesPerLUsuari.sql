@@ -97,3 +97,35 @@ SELECT tipoProducto(4);
 SELECT tipoProducto(10);
 SELECT tipoProducto(100);
 SELECT tipoProducto(13);
+
+/* A PARTIR DE AQUI SOLUCIONES JOSE */
+-- Tasca 5. Crea una funció que realitzi la funcionalitat de la Tasca 3 de M02 UF2 Activitat 9.2 - Consultes niades III.
+DELIMITER // 
+CREATE OR REPLACE FUNCTION getImportTotalComanda(pNumero SMALLINT(6)) 
+RETURNS DECIMAL(6,2)
+BEGIN 
+	RETURN (SELECT SUM(p.preu * cp.quantitat)
+			FROM comanda_producte cp
+				INNER JOIN producte p ON p.id_producte = cp.id_producte
+			WHERE cp.numero = pNumero); 
+END // 
+DELIMITER ; 
+
+SELECT co.numero, getImportTotalComanda(co.numero)
+FROM comanda co
+ORDER BY co.numero;
+
+
+-- Tasca 6. Crea una funció que realitzi la funcionalitat de la Tasca 5 de M02 UF2 Activitat 9.2 - Consultes niades III.
+DELIMITER // 
+CREATE OR REPLACE FUNCTION getQuantitatProductesComanda(pNumero SMALLINT(6)) 
+RETURNS INT
+BEGIN 
+	RETURN (SELECT SUM(cp.quantitat)
+			FROM comanda_producte cp
+			WHERE cp.numero = pNumero); 
+END // 
+DELIMITER ; 
+
+SELECT co.numero, getQuantitatProductesComanda(co.numero) AS NumProductesComanda
+FROM comanda co;
